@@ -1,0 +1,305 @@
+================================================================================
+                    HOMIE FURNITURE RENTALS - BACKEND REFERENCE
+                     COMPLETE REST API & SECURITY SPECIFICATION
+================================================================================
+
+This document provides a comprehensive technical overview and reference manual for
+the Spring Boot backend. It includes complete details on all REST APIs, data schemas,
+JWT authorization checks, database persistence mechanisms, developer logging, and 
+production deployment readiness checklists.
+
+--------------------------------------------------------------------------------
+1. CORE ARCHITECTURE & TECHNOLOGY STACK
+--------------------------------------------------------------------------------
+* Framework: Spring Boot (v2.3.6.RELEASE)
+* Platform: Java 8 (fully compatible with standard JVM runtimes)
+* Servlet Engine: Tomcat Embedded (Servlet API 3.x - javax.servlet scope)
+* Authentication: Stateless JWT-based signature validation (HS256)
+* Storage Model: JSON-based atomic flat-file datastore (db.json)
+* Thread Safety: ReentrantReadWriteLock (fair locking mechanism on database reads/writes)
+* Durability: Multi-version rolling database auto-backups (last 5 historical copies preserved)
+
+--------------------------------------------------------------------------------
+2. DATABASE SERVICES & PATH RESOLUTION
+--------------------------------------------------------------------------------
+DatabaseService (DatabaseService.java) automatically locates, loads, and atomic-flushes
+the flat-file JSON datastore.
+
+A. Automatic Database Discovery Path Priority:
+  1. c:\Users\Bharanidharan\Desktop\booby\booby_fronted\db.json (Pre-configured local path)
+  2. ../booby_fronted/db.json (Parent workspace relative path)
+  3. ./booby_fronted/db.json (Local frontend directory relative path)
+  4. ./db.json (Local execution path)
+  5. db.json (Default fallback path)
+
+B. Core Database Methods:
+  * getList(String key): Performs a shared read-locked lookup for database collections.
+  * add(String key, Map<String, Object> item): Adds a new item, automatically generating a 
+    unique 8-character ID if none exists, and issues an atomic save request.
+  * update(String key, String id, Map<String, Object> updatedItem): Performs a write-locked
+    merge (putAll) patch operation on matching IDs and commits changes.
+  * delete(String key, String id): Removes matching records safely.
+  * save(): Creates a timestamped rolling backup under the parent 'backups/' directory
+    (maintaining only the latest 5 files) and then flushes changes to disk.
+
+--------------------------------------------------------------------------------
+3. IDENTITY & SECURITY ARCHITECTURE (JWT SPECIFICATION)
+--------------------------------------------------------------------------------
+The application utilizes a high-security custom JWT (Json Web Token) signature utility 
+(JwtUtil.java) to authorize sessions, verify identities, and prevent unauthorized actions.
+
+A. Signature Configurations:
+  * Algorithm: HMAC-SHA256 (HS256)
+  * Signature Secret: "HomieFurnitureRentalsSuperSecretProductionJWTKey2026"
+  * Token Lifespan: 10 Days (240 Hours) from issuance
+
+B. Token Payload Claims Schema:
+  {
+    "id": "bfa6",                       // User unique identifier
+    "role": "admin",                    // Authorization role: "admin" | "user"
+    "phone": "9355693923",              // User registered phone number
+    "exp": 1781010041700                // Expiration Unix Timestamp (ms)
+  }
+
+C. Controller Security Interceptor Logic:
+  Protected operations intercept the "Authorization" HTTP Header. If the header starts 
+  with "Bearer ", the token signature is checked against the server-secret.
+  * If the signature is valid and the token is active, user claims are extracted.
+  * Access rights are strictly evaluated:
+    - Normal Users: Can ONLY access/modify/delete resources belonging to their own 'id'.
+    - Administrators: Can perform any administrative write or read operations globally.
+
+--------------------------------------------------------------------------------
+4. COMPLETE REST API ENDPOINT REFERENCE
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+A. USERS ENDPOINTS (/users)
+--------------------------------------------------------------------------------
+1. GET /users
+   * Description: List all registered user profiles.
+   * Access: Admin role can view all. Regular users are strictly limited to their own record.
+   * Query Parameters: ?phone=9355693923 (Optional filter by phone number)
+   * Headers: Authorization: Bearer <token> (Optional/Enforced for non-admins)
+   * Response: 200 OK - Array of user objects.
+
+2. GET /users/{id}
+   * Description: Retrieve detailed user profile by ID.
+   * Access: Admin OR the user matching the {id} parameter.
+   * Headers: Authorization: Bearer <token>
+   * Response: 200 OK - User profile object | 403 Forbidden | 404 Not Found
+
+3. POST /users
+   * Description: Register a new user profile. Bypasses security checks for new accounts.
+   * Payload: { "name": "...", "phone": "...", "email": "...", "role": "user" }
+   * Response: 200 OK - Created user profile with a newly generated session JWT token.
+
+4. PUT /users/{id}
+   * Description: Overwrite / fully update user profile.
+   * Access: Admin OR the user matching the {id} parameter.
+   * Headers: Authorization: Bearer <token>
+   * Payload: { "name": "...", "email": "...", "phone": "..." }
+   * Response: 200 OK - Updated user profile with refreshed JWT token.
+
+5. PATCH /users/{id}
+   * Description: Partially update user profile (e.g. name, email, or avatar image).
+   * Access: Admin OR the user matching the {id} parameter.
+   * Headers: Authorization: Bearer <token>
+   * Payload: { "image": "data:image/jpeg;base64,..." } OR { "name": "..." }
+   * Response: 200 OK - Updated user profile with refreshed JWT token.
+
+6. DELETE /users/{id}
+   * Description: Permanently delete a user account from database.
+   * Access: Admin OR the user matching the {id} parameter.
+   * Headers: Authorization: Bearer <token>
+   * Response: 204 No Content | 403 Forbidden | 404 Not Found
+
+--------------------------------------------------------------------------------
+B. PRODUCTS ENDPOINTS (/products)
+--------------------------------------------------------------------------------
+1. GET /products
+   * Description: List all catalog furniture rental items.
+   * Access: Publicly readable by anyone.
+   * Response: 200 OK - Array of product items.
+
+2. GET /products/{id}
+   * Description: Retrieve details for a single product item.
+   * Access: Publicly readable.
+   * Response: 200 OK - Product details object | 404 Not Found
+
+3. POST /products
+   * Description: Add a new furniture item to the rental store catalog.
+   * Access: Admin role ONLY.
+   * Headers: Authorization: Bearer <token>
+   * Payload: { "name": "...", "price": 250, "category": "Sofa", "image": "..." }
+   * Response: 200 OK - Created product details | 403 Forbidden
+
+4. PUT /products/{id}
+   * Description: Overwrite / fully update a furniture catalog item.
+   * Access: Admin role ONLY.
+   * Headers: Authorization: Bearer <token>
+   * Response: 200 OK | 403 Forbidden | 404 Not Found
+
+5. PATCH /products/{id}
+   * Description: Partially update product properties (e.g. inventory details, pricing).
+   * Access: Admin role ONLY.
+   * Headers: Authorization: Bearer <token>
+   * Response: 200 OK | 403 Forbidden | 404 Not Found
+
+6. DELETE /products/{id}
+   * Description: Delete a furniture item from the catalog store.
+   * Access: Admin role ONLY.
+   * Headers: Authorization: Bearer <token>
+   * Response: 204 No Content | 403 Forbidden
+
+--------------------------------------------------------------------------------
+C. ORDERS ENDPOINTS (/orders)
+--------------------------------------------------------------------------------
+1. GET /orders
+   * Description: List orders.
+   * Access: Admins can list all orders. Regular users can ONLY view their own orders.
+   * Query Parameters: ?userId=73d5 (Optional filter)
+   * Headers: Authorization: Bearer <token>
+   * Response: 200 OK - Array of order records.
+
+2. POST /orders
+   * Description: Place a new furniture rental order.
+   * Access: Admin OR the user matching the order's "userId" field.
+   * Headers: Authorization: Bearer <token>
+   * Payload: { "userId": "...", "items": [...], "total": 549, "address": {...} }
+   * Response: 200 OK - Created order record | 403 Forbidden
+
+3. PUT /orders/{id}
+   * Description: Modify / overwrite order details.
+   * Access: Admin OR the order owner matching order "userId".
+   * Headers: Authorization: Bearer <token>
+   * Response: 200 OK | 403 Forbidden
+
+4. PATCH /orders/{id}
+   * Description: Partially modify order details (e.g. status transition from pending to delivered).
+   * Access: Admin OR the order owner matching order "userId".
+   * Headers: Authorization: Bearer <token>
+   * Response: 200 OK | 403 Forbidden
+
+5. DELETE /orders/{id}
+   * Description: Delete / cancel an order from the database history.
+   * Access: Admin OR the order owner.
+   * Headers: Authorization: Bearer <token>
+   * Response: 204 No Content | 403 Forbidden
+
+--------------------------------------------------------------------------------
+D. ADDRESSES ENDPOINTS (/addresses)
+--------------------------------------------------------------------------------
+1. GET /addresses
+   * Description: List shipping/billing addresses.
+   * Query Parameters: ?userId=73d5 (Optional filter by owner ID)
+   * Response: 200 OK - Array of address items.
+
+2. POST /addresses
+   * Description: Register a new shipping address.
+   * Payload: { "userId": "...", "name": "...", "phone": "...", "address": "..." }
+   * Response: 200 OK - Address record.
+
+3. PUT /addresses/{id} / PATCH /addresses/{id}
+   * Description: Update shipping address properties.
+   * Response: 200 OK - Updated Address.
+
+4. DELETE /addresses/{id}
+   * Description: Remove address from profile.
+   * Response: 204 No Content.
+
+--------------------------------------------------------------------------------
+E. WISHLIST ENDPOINTS (/wishlist)
+--------------------------------------------------------------------------------
+1. GET /wishlist
+   * Description: Get wishlist items.
+   * Query Parameters: ?userId=73d5 (Optional filter)
+   * Response: 200 OK.
+
+2. POST /wishlist
+   * Description: Add product to user wishlist.
+   * Payload: { "userId": "...", "productId": "...", "name": "..." }
+   * Response: 200 OK.
+
+3. DELETE /wishlist/{id}
+   * Description: Remove item from wishlist.
+   * Response: 204 No Content.
+
+--------------------------------------------------------------------------------
+F. REVIEWS ENDPOINTS (/reviews)
+--------------------------------------------------------------------------------
+1. GET /reviews
+   * Description: List product reviews.
+   * Query Parameters: ?productId=191c (Optional filter)
+   * Response: 200 OK.
+
+2. POST /reviews / PUT /reviews/{id} / PATCH /reviews/{id}
+   * Description: Create, update, or edit a product review.
+   * Response: 200 OK.
+
+3. DELETE /reviews/{id}
+   * Description: Delete review.
+   * Response: 204 No Content.
+
+--------------------------------------------------------------------------------
+G. USER REVIEWS / TESTIMONIALS (/userReviews)
+--------------------------------------------------------------------------------
+1. GET /userReviews
+   * Description: List all home testimonials.
+   * Response: 200 OK.
+
+2. POST /userReviews
+   * Description: Post a public testimonial.
+   * Response: 200 OK.
+
+--------------------------------------------------------------------------------
+H. SYSTEM DIAGNOSTIC HEALTH CHECK (/health)
+--------------------------------------------------------------------------------
+1. GET /health
+   * Description: Retrieve detailed system diagnostic checks.
+   * Access: Publicly checkable.
+   * Response: 200 OK
+     {
+       "status": "UP",
+       "databasePath": "c:\\Users\\Bharanidharan\\Desktop\\booby\\booby_fronted\\db.json",
+       "jvm": {
+         "freeMemory": "124 MB",
+         "totalMemory": "256 MB",
+         "maxMemory": "1940 MB",
+         "availableProcessors": 12
+       },
+       "timestamp": "Sat May 30 19:15:00 IST 2026"
+     }
+
+--------------------------------------------------------------------------------
+5. DEVELOPER REQUEST INTERCEPTOR LOGGING
+--------------------------------------------------------------------------------
+The request logger (RequestLoggingFilter.java) wraps HttpServletRequest/Response inside
+ContentCachingRequestWrapper and ContentCachingResponseWrapper to catch streams safely without
+causing stream consumption exceptions inside controllers.
+
+It prints details on the IntelliJ Run console in the following structured format:
+
+┌─────────────────── [HTTP REQUEST LOG] ───────────────────
+│ Time        : 2026-05-30 19:15:30.123
+│ Client IP   : 127.0.0.1
+│ Method      : PATCH
+│ URI         : /users/bfa6
+│ Headers     : Content-Type=application/json; Authorization=Bearer eyJ0eX...
+│ Request Body: { "name": "Pawan Sharma", "email": "pawansharma@gmail.com" }
+├─────────────────── [HTTP RESPONSE LOG] ──────────────────
+│ Status      : 200
+│ Time Taken  : 45 ms
+│ Response Body: { "id": "bfa6", "name": "Pawan Sharma", "role": "admin", ... }
+└──────────────────────────────────────────────────────────
+
+--------------------------------------------------------------------------------
+6. PRODUCTION SECURITY CHECKLIST
+--------------------------------------------------------------------------------
+  1. Enforce IDOR protection verification globally across all private routes.
+  2. Set server.port=5000 in application.properties.
+  3. Support CORS mappings to allow localhost:5173 to access resources safely.
+  4. Encrypt session tokens with HMAC-SHA256 signature algorithm.
+  5. Validate token expiration dates in validateToken() and getClaims().
+  6. Enable database durability with rolling files backup under DatabaseService.
+================================================================================

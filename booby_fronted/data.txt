@@ -1,0 +1,297 @@
+================================================================================
+                    HOMIE FURNITURE RENTALS - BACKEND BLUEPRINT
+================================================================================
+This document provides a comprehensive technical analysis of the Homie Furniture
+Rentals frontend application, outlining the precise API requirements, database
+models, authentication layers, payment gateway integrations, and overall backend
+technical needs to transition from the current mock "json-server" to a robust
+production-grade backend.
+
+--------------------------------------------------------------------------------
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+Homie Furniture Rentals is an ultra-premium, interactive web platform that allows
+users to browse, wishlist, and rent high-quality furniture (e.g., Beds, Sofas,
+Dressers, TV Units, Mattresses, etc.) on a monthly subscription basis. The portal
+includes user profile management, address/shipping logs, checkouts with rental
+duration inputs, customer reviews, and a full-featured Admin panel to manage
+products, track rental orders, modify user access, and analyze key platform metrics.
+
+--------------------------------------------------------------------------------
+2. FULL API REQUIREMENTS (ENDPOINTS LIST)
+--------------------------------------------------------------------------------
+The backend must expose a secure RESTful API supporting CORS and standard content
+negotiation. Below is the mapping of all endpoints accessed by the frontend:
+
+--- A. USER MANAGEMENT & AUTHENTICATION (`/users`) ---
+* GET /users?phone={phone}
+  - Description: Checks if a user is already registered with the specified phone number.
+  - Usage: Login and OTP verification flows.
+  - Return: User object if found, or 404/Empty.
+
+* POST /users
+  - Description: Registers a new user.
+  - Payload:
+    {
+      "name": "User Name",
+      "email": "user@email.com",
+      "phone": "9999999999",
+      "role": "user", // defaults to 'user'
+      "image": "base64_or_url", // optional profile pic
+      "createdAt": "YYYY-MM-DD",
+      "isBlocked": false,
+      "orders": [],
+      "totalSpent": 0
+    }
+  - Return: Created User object + Session/JWT Token.
+
+* GET /users
+  - Description: Fetches a list of all registered users (Admin access only).
+  - Return: Array of User objects.
+
+* GET /users/{id}
+  - Description: Fetches details of a specific user.
+  - Return: User object.
+
+* PUT /users/{id}
+  - Description: Updates a specific user's profile details or access status (Admin blocking, role changes, or user profile edits).
+  - Payload: User fields to update (e.g., name, email, phone, image, isBlocked, role).
+  - Return: Updated User object.
+
+* DELETE /users/{id}
+  - Description: Removes a user from the system permanently (Admin access only).
+  - Return: Success message.
+
+--- B. PRODUCT CATALOG (`/products`) ---
+* GET /products
+  - Description: Retrieves all furniture items available for rent. Supports category or query filters.
+  - Return: Array of Product objects.
+
+* GET /products/{id}
+  - Description: Retrieves detailed specifications of a single product (images, description, features, in-box contents, dimensions, reviews).
+  - Return: Detailed Product object.
+
+* POST /products (Admin Only)
+  - Description: Adds a new furniture item to the catalog.
+  - Payload:
+    {
+      "name": "Product Name",
+      "price": 120, // Monthly rental price
+      "category": "Beds",
+      "image": "main_image_url",
+      "images": ["image_url_1", "image_url_2"],
+      "description": "Product details...",
+      "features": ["Feature 1", "Feature 2"],
+      "inBox": ["Item 1", "Item 2"],
+      "dimensions": "75\"L x 62\"B x 37\"H"
+    }
+  - Return: Created Product object.
+
+* PUT /products/{id} (Admin Only)
+  - Description: Modifies details of an existing product.
+  - Payload: Updated product fields.
+  - Return: Updated Product object.
+
+* DELETE /products/{id} (Admin Only)
+  - Description: Removes a product from the catalog.
+  - Return: Success message.
+
+--- C. ORDERS & CHECKOUT MANAGEMENT (`/orders`) ---
+* GET /orders
+  - Description: Fetches all placed orders (Admin lists all, User lists their own).
+  - Return: Array of Order objects.
+
+* POST /orders
+  - Description: Places a new rental subscription order.
+  - Payload:
+    {
+      "orderId": "ORD-1775654921066",
+      "userId": "73d5",
+      "userEmail": "user@email.com",
+      "items": [
+        {
+          "id": "1",
+          "name": "Product Name",
+          "price": 100,
+          "category": "Beds",
+          "image": "img_url",
+          "quantity": 2,
+          "months": 3
+        }
+      ],
+      "address": {
+        "id": 1234567,
+        "name": "User Name",
+        "phone": "9999999999",
+        "address": "Full delivery address string"
+      },
+      "total": 549, // Calculated as (price * quantity * months) + refundable deposit/fees
+      "payment": "Razorpay",
+      "status": "pending",
+      "date": "2026-04-08T13:28:41.066Z"
+    }
+  - Return: Placed Order object with validation status.
+
+* PUT /orders/{id} (Admin Only)
+  - Description: Updates the status of a rental order (e.g., pending -> approved -> active -> completed -> cancelled).
+  - Payload: { "status": "approved" }
+  - Return: Updated Order object.
+
+* DELETE /orders/{id} (Admin Only)
+  - Description: Deletes or cancels a rental order record.
+  - Return: Success message.
+
+--- D. SAVED ADDRESSES (`/addresses`) ---
+* GET /addresses?userId={userId}
+  - Description: Fetches saved billing/delivery addresses of a specific user.
+  - Return: Array of Address objects.
+
+* POST /addresses
+  - Description: Saves a new address profile for quick checkout.
+  - Payload: { "userId": "user_id", "name": "Name", "phone": "Phone", "address": "Address text", "location": "coords/sublocality" }
+  - Return: Created Address object.
+
+* PUT /addresses/{id}
+  - Description: Updates a previously saved address.
+  - Payload: Updated address fields.
+  - Return: Updated Address object.
+
+* DELETE /addresses/{id}
+  - Description: Deletes a saved address.
+  - Return: Success message.
+
+--- E. WISHLIST MANAGEMENT (`/wishlist`) ---
+* GET /wishlist?userId={userId}
+  - Description: Retrieves wishlisted items of a user.
+  - Return: Array of Wishlist objects.
+
+* POST /wishlist
+  - Description: Adds a product to the user's wishlist.
+  - Payload: { "userId": "user_id", "productId": "prod_id", ...productDetails }
+  - Return: Added Wishlist item.
+
+* DELETE /wishlist/{id}
+  - Description: Removes an item from the user's wishlist.
+  - Return: Success message.
+
+--- F. REVIEWS & TESTIMONIALS (`/reviews` & `/userReviews`) ---
+* GET /reviews?productId={id}
+  - Description: Fetches detailed reviews for a specific product.
+  - Return: Array of Review objects.
+
+* POST /reviews
+  - Description: Adds a user review for a rented product.
+  - Payload: { "productId": "id", "userId": "user_id", "rating": 5, "comment": "Excellent!", "date": "..." }
+  - Return: Saved Review object.
+
+* PUT /reviews/{id}
+  - Description: Edit a previously submitted review.
+  - Return: Updated Review object.
+
+* DELETE /reviews/{id}
+  - Description: Removes a product review.
+  - Return: Success message.
+
+* GET /userReviews
+  - Description: Fetches platform-wide user testimonials for the landing page.
+  - Return: Array of Testimonial objects.
+
+* POST /userReviews
+  - Description: Submits a new testimonial/feedback about the renting experience.
+  - Payload: { "name": "User Name", "review": "Feedback text", "rating": 5 }
+  - Return: Created Testimonial object.
+
+--------------------------------------------------------------------------------
+3. BACKEND TECHNICAL NEEDS (PRODUCTION BLUEPRINT)
+--------------------------------------------------------------------------------
+To replace mock storage (`db.json`) with a robust back-end ecosystem, the following technical requirements must be satisfied:
+
+--- A. TECH STACK RECOMMENDATION ---
+* Runtime: Node.js (with Express) or Python (with FastAPI / Django).
+* Database: 
+  - PostgreSQL / MySQL (Relational - Recommended for structured users, products, orders, addresses, and wishlist relations).
+  - MongoDB (Document Store - Excellent for highly flexible product catalogs and nested reviews).
+* ORM: Prisma / Mongoose / Sequelize / SQLAlchemy.
+* Image Storage: Cloudinary / AWS S3 (for profile pics and high-res product images).
+* Payments: Razorpay SDK.
+* Auth: JSON Web Tokens (JWT) & bcrypt (for password hashing).
+
+--- B. DATABASE SCHEMA & DATA MODEL RELATIONSHIPS ---
+1. **User Table**:
+   - id (Primary Key)
+   - name, email, phone (Indexed, Unique)
+   - passwordHash
+   - role (Enum: 'user', 'admin')
+   - image (profile pic URL)
+   - isBlocked (Boolean)
+   - createdAt
+   - Relationships: One-to-Many with `Orders`, `Addresses`, `Reviews`, `Wishlist`.
+
+2. **Product Table**:
+   - id (Primary Key)
+   - name, category, dimensions
+   - price (Monthly rental fee)
+   - description
+   - features, inBox (JSON / String Arrays)
+   - image (Main), images (URLs Array)
+   - Relationships: One-to-Many with `Reviews`.
+
+3. **Order Table**:
+   - orderId (Primary Key, unique string code)
+   - userId (Foreign Key -> User)
+   - items (JSON block storing snapshot of rented products, quantity, monthly terms, and subscription cost)
+   - address (Snapshot of delivery address to prevent order alteration if user deletes the address)
+   - total (calculated price)
+   - paymentMethod ('Razorpay', 'COD')
+   - paymentId (transaction hash from payment gateway)
+   - status (Enum: 'pending', 'approved', 'active', 'completed', 'cancelled')
+   - date (Order creation timestamp)
+
+4. **Address Table**:
+   - id (Primary Key)
+   - userId (Foreign Key -> User)
+   - name, phone, address, location
+
+5. **Review Table**:
+   - id (Primary Key)
+   - productId (Foreign Key -> Product)
+   - userId (Foreign Key -> User)
+   - rating (1-5)
+   - comment (Text)
+   - date
+
+6. **Wishlist Table**:
+   - id (Primary Key)
+   - userId (Foreign Key -> User)
+   - productId (Foreign Key -> Product)
+
+7. **UserReview Table (Testimonials)**:
+   - id (Primary Key)
+   - name, review, rating, image
+
+--- C. CORE SECURITY & AUTHENTICATION (RBAC) ---
+* **Authentication**: Currently the frontend simulates login by querying users by phone. In a production environment:
+  - Integrate an SMS OTP Gateway (e.g., Twilio) or a password-based signup/login.
+  - Generate a secure JWT (JSON Web Token) on successful login containing user `id` and `role`.
+* **Authorization Middleware (RBAC)**:
+  - `isAuthenticated`: Validates incoming Bearer Token.
+  - `isAdmin`: Ensures `user.role === 'admin'` before letting request pass to product creation, blocking users, or order state modifications.
+  - `isOwner`: Restricts regular users to only viewing and modifying their own addresses, wishlists, and order histories.
+
+--- D. TRANSACTIONAL PAYMENT GATEWAY (RAZORPAY) ---
+* The frontend uses "Razorpay" as its payment method. The backend must handle:
+  1. **Order Creation**: Create a transaction order in Razorpay using `razorpay.orders.create({amount, currency, receipt})`. Send the `order_id` back to the frontend.
+  2. **Payment Verification**: The frontend initiates payment and receives a `razorpay_payment_id`, `razorpay_order_id`, and `razorpay_signature`.
+  3. **Signature Validation**: Backend verifies signature using HMAC SHA256 before marking the order as "approved" in the local database to prevent fraud.
+
+--- E. IMAGE UPLOAD WORKFLOW ---
+* Admin needs to upload product images. User needs to upload profile images.
+* Setup middleware like `Multer` combined with `Cloudinary SDK` or `AWS S3 SDK` to directly stream files to cloud storage, returning secure HTTPS image URLs to save in the database.
+
+--- F. RENTAL SUBSCRIPTION SCHEDULER (CRON) ---
+* Since this is a rental application, orders have duration in "months".
+* Set up a nightly Cron Job (using `node-cron` or Celery) that:
+  - Checks for active orders reaching their expiration date.
+  - Sends email notifications or automatic billing alerts.
+  - Auto-updates the order status to "completed" or triggers renewal.
+================================================================================

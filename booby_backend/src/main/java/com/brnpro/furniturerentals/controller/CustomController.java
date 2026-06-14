@@ -1,7 +1,10 @@
-package com.gmail.merikbest2015.ecommerce.controller;
+/*
+ * Developed by brnpro
+ */
+package com.brnpro.furniturerentals.controller;
 
-import com.gmail.merikbest2015.ecommerce.service.DatabaseService;
-import com.gmail.merikbest2015.ecommerce.util.JwtUtil;
+import com.brnpro.furniturerentals.service.DatabaseService;
+import com.brnpro.furniturerentals.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -15,32 +15,30 @@ production deployment readiness checklists.
 * Platform: Java 8 (fully compatible with standard JVM runtimes)
 * Servlet Engine: Tomcat Embedded (Servlet API 3.x - javax.servlet scope)
 * Authentication: Stateless JWT-based signature validation (HS256)
-* Storage Model: JSON-based atomic flat-file datastore (db.json)
-* Thread Safety: ReentrantReadWriteLock (fair locking mechanism on database reads/writes)
-* Durability: Multi-version rolling database auto-backups (last 5 historical copies preserved)
+* Storage Model: MongoDB database ('booby')
+* Connection URI: mongodb://localhost:27017/booby
+* Durability: MongoDB persistent storage, with auto-migration from local db.json if database is empty.
 
 --------------------------------------------------------------------------------
-2. DATABASE SERVICES & PATH RESOLUTION
+2. DATABASE SERVICES & MONGODB INTEGRATION
 --------------------------------------------------------------------------------
-DatabaseService (DatabaseService.java) automatically locates, loads, and atomic-flushes
-the flat-file JSON datastore.
+DatabaseService (DatabaseService.java) connects to MongoDB using Spring Data's MongoTemplate.
+It supports automatic collection mapping, dynamic CRUD operations, and pre-run data 
+migration from local flat-file database (db.json) to MongoDB if the collection is empty.
 
-A. Automatic Database Discovery Path Priority:
-  1. c:\Users\Bharanidharan\Desktop\booby\booby_fronted\db.json (Pre-configured local path)
-  2. ../booby_fronted/db.json (Parent workspace relative path)
-  3. ./booby_fronted/db.json (Local frontend directory relative path)
-  4. ./db.json (Local execution path)
-  5. db.json (Default fallback path)
+A. Database Connection Details:
+  * Environment Variable: MONGO_URI (e.g. MONGO_URI=mongodb://localhost:27017/booby)
+  * Fallback Connection URI: mongodb://localhost:27017/booby
+  * Configuration Key: spring.data.mongodb.uri (in application.properties)
 
 B. Core Database Methods:
-  * getList(String key): Performs a shared read-locked lookup for database collections.
-  * add(String key, Map<String, Object> item): Adds a new item, automatically generating a 
-    unique 8-character ID if none exists, and issues an atomic save request.
-  * update(String key, String id, Map<String, Object> updatedItem): Performs a write-locked
-    merge (putAll) patch operation on matching IDs and commits changes.
-  * delete(String key, String id): Removes matching records safely.
-  * save(): Creates a timestamped rolling backup under the parent 'backups/' directory
-    (maintaining only the latest 5 files) and then flushes changes to disk.
+  * getList(String key): Retrieves all documents in the collection name mapped to `key`.
+  * add(String key, Map<String, Object> item): Inserts a document, automatically generating
+    a unique 8-character ID if none exists.
+  * update(String key, String id, Map<String, Object> updatedItem): Performs an update
+    on the document matching `_id` or `id` matching parameter.
+  * delete(String key, String id): Deletes the matching document.
+  * save(): No-op method maintained for controller layer compatibility.
 
 --------------------------------------------------------------------------------
 3. IDENTITY & SECURITY ARCHITECTURE (JWT SPECIFICATION)
@@ -301,5 +299,5 @@ It prints details on the IntelliJ Run console in the following structured format
   3. Support CORS mappings to allow localhost:5173 to access resources safely.
   4. Encrypt session tokens with HMAC-SHA256 signature algorithm.
   5. Validate token expiration dates in validateToken() and getClaims().
-  6. Enable database durability with rolling files backup under DatabaseService.
+  6. Persist all records dynamically inside MongoDB collections.
 ================================================================================

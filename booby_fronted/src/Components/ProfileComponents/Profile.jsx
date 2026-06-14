@@ -19,7 +19,7 @@ const Profile = () => {
   useEffect(() => {
     if (!localUser?.id) return;
 
-    fetch(`http://localhost:5000/users/${localUser.id}`, {
+    fetch(`https://booby-backend.onrender.com/users/${localUser.id}`, {
       headers: {
         "Authorization": localUser?.token ? `Bearer ${localUser.token}` : ""
       }
@@ -48,7 +48,7 @@ const Profile = () => {
         setIsSaving(true);
 
         const res = await fetch(
-          `http://localhost:5000/users/${user.id}`,
+          `https://booby-backend.onrender.com/users/${user.id}`,
           {
             method: "PATCH",
             headers: { 
@@ -102,7 +102,7 @@ const Profile = () => {
         setIsSaving(true);
 
         const res = await fetch(
-          `http://localhost:5000/users/${user.id}`,
+          `https://booby-backend.onrender.com/users/${user.id}`,
           {
             method: "PATCH",
             headers: { 
@@ -228,7 +228,7 @@ const Profile = () => {
                   setIsSaving(true);
 
                   const res = await fetch(
-                    `http://localhost:5000/users/${user.id}`,
+                    `https://booby-backend.onrender.com/users/${user.id}`,
                     {
                       method: "PATCH",
                       headers: { 

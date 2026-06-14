@@ -13,7 +13,7 @@ const AdminUsers = () => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/users")
+    fetch("https://booby-backend.onrender.com/users")
       .then(res => res.json())
       .then(data => {
         const customers = data.filter(user => user.role !== "admin");
@@ -28,7 +28,7 @@ const AdminUsers = () => {
 
   const toggleBlock = async (user) => {
     const updated = { ...user, isBlocked: !user.isBlocked };
-    await fetch(`http://localhost:5000/users/${user.id}`, {
+    await fetch(`https://booby-backend.onrender.com/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updated)
@@ -38,15 +38,15 @@ const AdminUsers = () => {
 
   const handleDelete = async (userId) => {
     try {
-      const res = await fetch("http://localhost:5000/orders");
+      const res = await fetch("https://booby-backend.onrender.com/orders");
       const orders = await res.json();
       const userOrders = orders.filter(o => o.userId === userId);
       await Promise.all(
         userOrders.map(order =>
-          fetch(`http://localhost:5000/orders/${order.id}`, { method: "DELETE" })
+          fetch(`https://booby-backend.onrender.com/orders/${order.id}`, { method: "DELETE" })
         )
       );
-      await fetch(`http://localhost:5000/users/${userId}`, { method: "DELETE" });
+      await fetch(`https://booby-backend.onrender.com/users/${userId}`, { method: "DELETE" });
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (err) {
       console.error(err);

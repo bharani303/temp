@@ -44,7 +44,7 @@ localStorage.getItem("user")
 if(!user) return;
 
 fetch(
-`http://localhost:5000/addresses?userId=${user.id}`
+`https://booby-backend.onrender.com/addresses?userId=${user.id}`
 )
 
 .then(res=>res.json())
@@ -85,7 +85,7 @@ localStorage.getItem("user")
 if(editId){
 
 await fetch(
-`http://localhost:5000/addresses/${editId}`,
+`https://booby-backend.onrender.com/addresses/${editId}`,
 {
 method:"PATCH",
 headers:{
@@ -120,7 +120,7 @@ userId:user.id,
 };
 
 await fetch(
-"http://localhost:5000/addresses",
+"https://booby-backend.onrender.com/addresses",
 {
 method:"POST",
 headers:{
@@ -156,7 +156,7 @@ addressType:"Home"
 const handleDelete = async(id)=>{
 
 await fetch(
-`http://localhost:5000/addresses/${id}`,
+`https://booby-backend.onrender.com/addresses/${id}`,
 {
 method:"DELETE"
 }
@@ -205,7 +205,7 @@ handler: async function () {
 };
 
   //  1. SAVE ORDER
-  await fetch("http://localhost:5000/orders", {
+  await fetch("https://booby-backend.onrender.com/orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(newOrder),
@@ -218,7 +218,7 @@ handler: async function () {
     totalSpent: (user.totalSpent || 0) + newOrder.total
   };
 
-  await fetch(`http://localhost:5000/users/${user.id}`, {
+  await fetch(`https://booby-backend.onrender.com/users/${user.id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedUser),

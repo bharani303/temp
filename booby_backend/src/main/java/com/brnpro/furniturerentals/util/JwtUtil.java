@@ -1,4 +1,7 @@
-package com.gmail.merikbest2015.ecommerce.util;
+/*
+ * Developed by brnpro
+ */
+package com.brnpro.furniturerentals.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

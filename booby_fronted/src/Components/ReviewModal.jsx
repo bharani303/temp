@@ -15,7 +15,7 @@ const ReviewModal = ({ onClose }) => {
   useEffect(() => {
     const checkReview = async () => {
       try {
-        const res = await fetch("http://localhost:5000/userReviews");
+        const res = await fetch("https://booby-backend.onrender.com/userReviews");
         const data = await res.json();
         const exists = data.some(r => r.userId === user?.id);
         if (exists) {
@@ -41,7 +41,7 @@ const ReviewModal = ({ onClose }) => {
       rating,
     };
 
-    await fetch("http://localhost:5000/userReviews", {
+    await fetch("https://booby-backend.onrender.com/userReviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newReview),

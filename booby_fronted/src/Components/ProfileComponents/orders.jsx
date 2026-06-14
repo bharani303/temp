@@ -16,7 +16,7 @@ const Orders = () => {
     const fetchOrders = async () => {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const res = await fetch("http://localhost:5000/orders", {
+      const res = await fetch("https://booby-backend.onrender.com/orders", {
         headers: {
           "Authorization": user?.token ? `Bearer ${user.token}` : ""
         }
@@ -47,7 +47,7 @@ const Orders = () => {
   //  DELETE ORDER (backend)
   const handleDeleteOrder = async (orderId) => {
     const user = JSON.parse(localStorage.getItem("user"));
-    await fetch(`http://localhost:5000/orders/${orderId}`, {
+    await fetch(`https://booby-backend.onrender.com/orders/${orderId}`, {
       method: "DELETE",
       headers: {
         "Authorization": user?.token ? `Bearer ${user.token}` : ""

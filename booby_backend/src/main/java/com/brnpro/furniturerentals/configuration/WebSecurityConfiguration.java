@@ -1,4 +1,7 @@
-package com.gmail.merikbest2015.ecommerce.configuration;
+/*
+ * Developed by brnpro
+ */
+package com.brnpro.furniturerentals.configuration;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

@@ -1,9 +1,9 @@
 export const getDashboardStats = async () => {
   try {
     const [usersRes, ordersRes, productsRes] = await Promise.all([
-      fetch("http://localhost:5000/users"),
-      fetch("http://localhost:5000/orders"),
-      fetch("http://localhost:5000/products"),
+      fetch("https://booby-backend.onrender.com/users"),
+      fetch("https://booby-backend.onrender.com/orders"),
+      fetch("https://booby-backend.onrender.com/products"),
     ]);
 
     const users = await usersRes.json();

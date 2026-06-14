@@ -61,8 +61,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [ordersRes, usersRes] = await Promise.all([
-        fetch("http://localhost:5000/orders"),
-        fetch("http://localhost:5000/users"),
+        fetch("https://booby-backend.onrender.com/orders"),
+        fetch("https://booby-backend.onrender.com/users"),
       ]);
       const ordersData = await ordersRes.json();
       const usersData = await usersRes.json();
@@ -80,9 +80,9 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const prepareBarData = async () => {
-      const ordersRes = await fetch("http://localhost:5000/orders");
+      const ordersRes = await fetch("https://booby-backend.onrender.com/orders");
       const ordersData = await ordersRes.json();
-      const usersRes = await fetch("http://localhost:5000/users");
+      const usersRes = await fetch("https://booby-backend.onrender.com/users");
       const usersData = await usersRes.json();
       const customers = usersData.filter(u => u.role !== "admin");
       const customerIds = customers.map(u => u.id);
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const preparePieData = async () => {
-      const res = await fetch("http://localhost:5000/products");
+      const res = await fetch("https://booby-backend.onrender.com/products");
       const data = await res.json();
       const categoryCount = {};
       data.forEach((product) => {

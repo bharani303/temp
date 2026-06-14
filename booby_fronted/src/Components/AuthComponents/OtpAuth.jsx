@@ -59,7 +59,7 @@ const handleKeyDown = (e, index) => {
   }
 
   try {
-    const res = await fetch(`http://localhost:5000/users?phone=${phone}`);
+    const res = await fetch(`https://booby-backend.onrender.com/users?phone=${phone}`);
     const data = await res.json();
 
     if (data.length === 0) {
@@ -81,7 +81,7 @@ const handleKeyDown = (e, index) => {
     const newUser = { name, phone };
 
     try {
-      await fetch("http://localhost:5000/users", {
+      await fetch("https://booby-backend.onrender.com/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

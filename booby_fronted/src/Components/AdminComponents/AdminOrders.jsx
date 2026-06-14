@@ -19,8 +19,8 @@ const AdminOrders = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [ordersRes, usersRes] = await Promise.all([
-        fetch("http://localhost:5000/orders"),
-        fetch("http://localhost:5000/users"),
+        fetch("https://booby-backend.onrender.com/orders"),
+        fetch("https://booby-backend.onrender.com/users"),
       ]);
       const ordersData = await ordersRes.json();
       const usersData = await usersRes.json();
@@ -68,7 +68,7 @@ const AdminOrders = () => {
 
   const updateStatus = async (order, newStatus) => {
     const updated = { ...order, status: newStatus };
-    await fetch(`http://localhost:5000/orders/${order.id}`, {
+    await fetch(`https://booby-backend.onrender.com/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updated),

@@ -9,7 +9,7 @@ const AdminProfile = () => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/users/bfa6")
+    fetch("https://booby-backend.onrender.com/users/bfa6")
       .then(res => res.json())
       .then(data => {
         setAdmin(data);
@@ -33,7 +33,7 @@ const AdminProfile = () => {
 
   const handleSave = async () => {
     const updatedData = { ...admin, ...form };
-    const res = await fetch(`http://localhost:5000/users/bfa6`, {
+    const res = await fetch(`https://booby-backend.onrender.com/users/bfa6`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedData)

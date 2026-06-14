@@ -16,7 +16,7 @@ const AdminProducts = () => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:5000/products")
+    fetch("https://booby-backend.onrender.com/products")
       .then(res => res.json())
       .then(data => setProducts(data));
   }, []);
@@ -40,7 +40,7 @@ const AdminProducts = () => {
 
     if (editProduct) {
       const updatedProduct = { ...editProduct, ...newProduct };
-      const res = await fetch(`http://localhost:5000/products/${editProduct.id}`, {
+      const res = await fetch(`https://booby-backend.onrender.com/products/${editProduct.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedProduct)
@@ -48,7 +48,7 @@ const AdminProducts = () => {
       const savedProduct = await res.json();
       setProducts(prev => prev.map(p => p.id === editProduct.id ? savedProduct : p));
     } else {
-      const res = await fetch("http://localhost:5000/products", {
+      const res = await fetch("https://booby-backend.onrender.com/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newProduct)
@@ -61,7 +61,7 @@ const AdminProducts = () => {
   };
 
   const handleDelete = async (id) => {
-    await fetch(`http://localhost:5000/products/${id}`, { method: "DELETE" });
+    await fetch(`https://booby-backend.onrender.com/products/${id}`, { method: "DELETE" });
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 

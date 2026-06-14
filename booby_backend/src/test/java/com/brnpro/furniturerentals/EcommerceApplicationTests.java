@@ -1,4 +1,7 @@
-package com.gmail.merikbest2015.ecommerce;
+/*
+ * Developed by brnpro
+ */
+package com.brnpro.furniturerentals;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

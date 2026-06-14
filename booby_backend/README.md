@@ -1,89 +1,99 @@
-[![Build Status](https://travis-ci.com/merikbest/ecommerce-spring-reactjs.svg?branch=travis-ci-test)](https://travis-ci.com/merikbest/ecommerce-spring-reactjs)
-[![codecov](https://codecov.io/gh/merikbest/ecommerce-spring-reactjs/branch/travis-ci-test/graph/badge.svg?token=sEfOfpBHDX)](https://codecov.io/gh/merikbest/ecommerce-spring-reactjs)
+# 🛋️ Homie Furniture Rentals - Spring Boot MongoDB Backend
 
-# :hibiscus: Perfume webstore
+This is the backend REST API server for the **Homie Furniture Rentals** web application. Originally relying on an in-memory flat-file database, it has been modernized to use a dynamic, persistent **MongoDB** datastore.
 
-E-commerce project developed using Spring Boot and React.js.<br>
+---
 
-#### An actual version of frontend build deployed to AWS S3 and backend deployed to Heroku:
-http://perfume-web.tk <br>
-Login: admin@gmail.com <br>
-Password: admin
+## 🚀 Key Features
 
-## Used Technologies:
+* **High Performance MongoDB Storage**: Powered by Spring Data MongoDB (`MongoTemplate`) for persistent, real-time database CRUD operations.
+* **Automatic JSON-to-Mongo Migration**: On first startup, the backend automatically detects if your MongoDB database is empty, locates your existing `db.json` file, and migrates all seed data (Users, Products, Orders, Addresses, Wishlist, Reviews) into MongoDB collections.
+* **Security & Authorization**: Custom stateless JWT authentication middleware (`JwtUtil.java`) with role-based checks (Admin vs. User) and IDOR route protection.
+* **Advanced Logging**: Full HTTP request/response payload caching and structured console logging (`RequestLoggingFilter.java`).
+* **Self-Healing IDs**: Automatic conversion between MongoDB's default `_id` field and the frontend's expected `id` string (and vice-versa) preventing schema compilation or JSON serialization errors.
+* **Diagnostic Health Checks**: Endpoint `/health` reporting database status, system time, and JVM memory utilization.
 
-* Back-end: Spring (Boot, Data, Security), JPA / Hibernate, PostgreSQL, JUnit, Mockito
-* Front-end: TypeScript, React.js, Redux Toolkit, Ant Design, Jest
-* Security: JWT, OAuth2 Google, Facebook, Github
-* REST API, GraphQL API
-* AWS S3, Heroku
-* Server Build: Maven
-* Client Build: npm, yarn, webpack
+---
 
-## Features
+## 🛠️ Tech Stack
 
-* Authentication with JWT and Email validation.
-* Authentication with Google, Facebook or Github
-* Customers can search for the product according to the specified criteria.
-* Customers can add and delete products from the shopping cart.
-* Customers can order the products in the shopping cart.
-* Customers can change their password and view their orders.
-* Admin can add or modify a product.
-* Admin can change the data of any user.
-* Admin can view orders of all users.
+* **Framework**: Spring Boot (v2.3.6.RELEASE)
+* **Java Version**: Java 8 / Java 23 compatible
+* **Database**: MongoDB (via `spring-boot-starter-data-mongodb`)
+* **Security**: Spring Security & Custom HMAC-SHA256 JWT validation
+* **API Documentation**: Swagger UI integrated
 
-## Installation
+---
 
-1. Install maven: [link](https://www.baeldung.com/install-maven-on-windows-linux-mac)
-2. Install Java 8: [link](https://www.oracle.com/ru/java/technologies/javase/javase8-archive-downloads.html)
-3. Install Intellij IDEA Ultimate: [link](https://www.jetbrains.com/idea/)
-4. Install Postgresql: [link](https://www.postgresql.org/download/)
-5. Open pgAdmin and create a new DB (name: perfume and perfumetest) in Postgresql: [link](https://www.guru99.com/postgresql-create-database.html#:~:text=PostgreSQL%20Create%20Database%20using%20pgAdmin)
-6. Add Postgresql properties to the application.properties file: [link](https://i.ibb.co/dL77cZS/prop-postgresql.png)
-7. Add Lombok and GraphQL plugins to the Intellij IDEA (File/Settings/Plugins)
-8. Register new AWS account: [link](https://portal.aws.amazon.com/billing/signup#/start)
-9. Create new S3 bucket: [link](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html)
-10. Change access from private to public in S3 bucket
-11. Add public access policy to S3 bucket (!!!important!!! see:
-    [doc](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-policy-language-overview.html),
-    [github examle](https://stackoverflow.com/questions/58580042/how-to-set-public-read-only-access-on-amazon-s3-bucket#:~:text=To%20make%20objects%20publicly%20accessible%2C%20use%20a%20policy%20like%20this%3A) or
-    [my example](https://i.ibb.co/mSpHmyL/12-bucket.jpg ))
-12. Get AWS keys: [link](https://supsystic.com/documentation/id-secret-access-key-amazon-s3/) and add to the application.properties file: [link](https://i.ibb.co/FKFKR4n/props-aws.png)
-13. Register in gmail
-14. Configure reCAPTCHA: [link](https://www.google.com/recaptcha/admin#list), [guide](https://developers.google.com/recaptcha/docs/verify), [video guide (RUS)](https://youtu.be/7cDpbAbhyjc?t=212)
-15. Add  reCAPTCHA key to the application.properties file: [link](https://i.ibb.co/nDTP8H5/prop-recaptcha.png) and to [link](https://github.com/merikbest/ecommerce-spring-reactjs/blob/4f74f86500ab9363c04a18412dd432bd913e0477/frontend/src/pages/Registration/Registration.tsx#L134)
-16. Add gmail account and password to the application.properties file: [link](https://i.ibb.co/0tRr1Gy/props-gmail.png)
-17. Go to [link](https://myaccount.google.com/u/2/lesssecureapps) (important) and change to: “Allow less secure apps: ON”
-18. Configure OAuth2: [link](https://console.cloud.google.com/apis/credentials), [guide](https://spring.io/guides/tutorials/spring-boot-oauth2/), [video guide (RUS)](https://www.youtube.com/watch?v=-ohlXEJeRX8&ab_channel=letsCode)
-19. Add OAuth2 properties to the application.properties file: [link](https://i.ibb.co/YpH4V3m/oauth2-props.png)
-20. Install node.js and npm: [link](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-21. Now you can run EcommerceApplication (port 8080) and open terminal in client directory and type: npm start
-22. Navigate to http://localhost:3000
+## ⚙️ Configuration & Environment Variables
 
-## Swagger Documentation
+You can run the application out-of-the-box or point it to a remote/cloud MongoDB instance using the following environment variable:
 
-https://perfume-websore-api.herokuapp.com/swagger-ui.html <br/>
-Or show local: <br/>
-http://localhost:8080/swagger-ui.html
+* **`MONGO_URI`**: The MongoDB Connection URI.
+  * *Default Fallback*: `mongodb://localhost:27017/booby`
 
-## Screenshots
+Inside `src/main/resources/application.properties`:
+```properties
+server.port=5000
+spring.data.mongodb.uri=${MONGO_URI:mongodb://localhost:27017/booby}
+```
 
-Menu page  |  Product page
-:------------------------:|:-------------------------:
-![Menu page](https://i.ibb.co/VT4RzYj/1menu.jpg)  |  ![Product page](https://i.ibb.co/HtnKp0W/2-Product-page.jpg)
+---
 
-Cart  |  Ordering
-:------------------------:|:-------------------------:
-![Email template](https://i.ibb.co/8Y8bfSG/3-Cart.jpg)  |  ![List of users](https://i.ibb.co/tLmY8y2/4-Ordering.jpg)
+## 🏃 Getting Started
 
-Email template  |  List of orders
-:------------------------:|:-------------------------:
-![Email template](https://i.ibb.co/bmKTLPJ/email-template.jpg)  |  ![List of users](https://i.ibb.co/pLTyF25/6-List-of-orders.jpg)
+### 1. Prerequisites
+- Install **Java JDK 8** or higher (Java 23 recommended).
+- Ensure a local instance of **MongoDB** is running on your machine:
+  ```powershell
+  # Check if port 27017 is listening
+  Get-NetTCPConnection -LocalPort 27017
+  ```
 
-User profile page  |  Add perfume page
-:------------------------:|:-------------------------:
-![User profile page](https://i.ibb.co/qx1Csc8/7-User-profile-page.jpg)  |  ![Add perfume page](https://i.ibb.co/XbsJPQH/8-Add-perfume-page.jpg)
+### 2. Compile the Project
+Using the Maven Wrapper:
+```powershell
+# Set JAVA_HOME path if needed
+$env:JAVA_HOME="C:\Program Files\Java\jdk-23"
+.\mvnw.cmd clean compile
+```
 
-Edit perfume list  |  Edit perfume page
-:------------------------:|:-------------------------:
-![Edit perfume list](https://i.ibb.co/HFb9wfR/9-Edit-perfume-list.jpg)  |  ![Edit perfume page](https://i.ibb.co/jH8R8xL/10-Edit-perfume-page.jpg)
+### 3. Run Tests
+Ensure all unit/integration tests compile and pass successfully:
+```powershell
+.\mvnw.cmd test
+```
+
+### 4. Run the Backend Server
+Start the server locally on port `5000`:
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+---
+
+## 📂 Core API Endpoints
+
+### 🔐 Auth & Users
+- `GET /users` — Get all users (Admin only) or current profile (User).
+- `GET /users/{id}` — Get detailed user profile by ID.
+- `POST /users` — Register a new user profile (returns dynamic JWT).
+- `PUT /users/{id}` / `PATCH /users/{id}` — Update profile.
+- `DELETE /users/{id}` — Permanently delete user.
+
+### 🛋️ Catalog Products
+- `GET /products` — Retrieve all catalog furniture items (Public).
+- `GET /products/{id}` — Retrieve details of a product (Public).
+- `POST /products` / `PUT /products/{id}` / `DELETE /products/{id}` — Catalog management (Admin only).
+
+### 🛒 Orders & Transactions
+- `GET /orders` — List orders (Admin views all; User views own).
+- `POST /orders` — Place a new furniture rental order.
+- `PUT /orders/{id}` / `PATCH /orders/{id}` — Edit order status (e.g. pending to active).
+- `DELETE /orders/{id}` — Cancel/remove order.
+
+### 📍 Auxiliary Services
+- `GET /addresses` / `POST /addresses` — Manage user shipping/billing addresses.
+- `GET /wishlist` / `POST /wishlist` — Manage user personal product wishlists.
+- `GET /reviews` / `POST /reviews` — Retrieve/post reviews on products.
+- `GET /health` — Diagnostic server health check.

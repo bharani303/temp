@@ -43,7 +43,7 @@ const newUser = {
   totalSpent: 0
 };
 
-  await fetch("http://localhost:5000/users", {
+  await fetch("https://booby-backend.onrender.com/users", {
     method: "POST",
     headers: { "Content-Type":"application/json" },
     body: JSON.stringify(newUser)
